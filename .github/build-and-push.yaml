@@ -55,3 +55,17 @@ jobs:
           ghcr.io/${{ github.repository }}:${{ needs.environment.outputs.appVersion }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+
+    - name: Trigger helm image bump
+      if: github.event_name == 'push'
+      env:
+        GH_TOKEN: ${{ secrets.HELM_DISPATCH_TOKEN }}
+        TAG: ${{ needs.environment.outputs.appVersion }}
+        CHART: ${{ github.event.repository.name }}
+      run: |
+        gh api repos/chris911e/helm/dispatches \
+          -f event_type=image-published \
+          -F "client_payload[chart]=$CHART" \
+          -F "client_payload[tag]=$TAG" \
+          -F "client_payload[env]=dev"
+
